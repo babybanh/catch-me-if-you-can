@@ -19,6 +19,7 @@ export function createGameUi(config, root, state, input) {
     hideGameOver,
     update,
     resetTuningToDefaults,
+    prepareAudioFromGesture: audio.prepareFromGesture,
     startMusicFromMovement: audio.startFromMovement,
     playSfx: audio.playSfx,
     previewSfx: audio.previewSfx,
@@ -794,6 +795,7 @@ function createAudioController(config) {
   let sfxEnabled = savedSfxPreference === null ? config.audio.sfxEnabled : savedSfxPreference === "true";
   let started = false;
   let interactionUnlocked = false;
+  let audioPrimed = false;
   let loopTimer = null;
   let audioContext = null;
   const audio = new Audio(config.audio.musicPath);
@@ -821,14 +823,47 @@ function createAudioController(config) {
 
   function play() {
     audio.volume = config.audio.musicVolume;
+    audio.muted = false;
     audio.play().catch(() => {
       started = false;
     });
   }
 
-  function startFromMovement() {
+  function prepareFromGesture() {
     interactionUnlocked = true;
     unlockAudioContext();
+    if (audioPrimed) return;
+    audioPrimed = true;
+
+    const wasMuted = audio.muted;
+    audio.muted = true;
+    audio.volume = 0;
+    const prime = audio.play();
+    if (prime?.then) {
+      prime
+        .then(() => {
+          if (!started) {
+            audio.pause();
+            audio.currentTime = 0;
+          }
+          audio.muted = wasMuted;
+          audio.volume = config.audio.musicVolume;
+        })
+        .catch(() => {
+          audio.muted = wasMuted;
+          audio.volume = config.audio.musicVolume;
+          if (!started) audioPrimed = false;
+        });
+    } else {
+      audio.pause();
+      audio.currentTime = 0;
+      audio.muted = wasMuted;
+      audio.volume = config.audio.musicVolume;
+    }
+  }
+
+  function startFromMovement() {
+    prepareFromGesture();
     if (!musicEnabled || started || !config.audio.startOnFirstMovement) return;
     started = true;
     play();
@@ -933,6 +968,7 @@ function createAudioController(config) {
   }
 
   return {
+    prepareFromGesture,
     startFromMovement,
     toggleMusic,
     toggleSfx,

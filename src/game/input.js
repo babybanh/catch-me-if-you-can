@@ -16,6 +16,7 @@ export function createInputController(config, shell) {
     joystick,
     debugToggleRequested: false,
     tuningToggleRequested: false,
+    onAudioGestureStart: null,
     onMovementGesture: null,
     getDirection,
     resetJoystick,
@@ -27,6 +28,7 @@ export function createInputController(config, shell) {
     const isFirstPress = !keysDown.has(key);
     keysDown.add(key);
     if (isMovementKey(key)) {
+      notifyAudioGestureStart(controller);
       notifyMovementGesture(controller);
     }
     if (config.controls.debugToggleKeys.includes(key) && isFirstPress) {
@@ -47,6 +49,7 @@ export function createInputController(config, shell) {
     if (event.target.closest("[data-ui-control='true']")) return;
     const point = toDesignPoint(event, shell, config);
     if (!isInControlZone(point, config)) return;
+    notifyAudioGestureStart(controller);
     joystick.active = true;
     joystick.baseX = point.x;
     joystick.baseY = point.y;
@@ -114,6 +117,10 @@ export function createInputController(config, shell) {
 
 function notifyMovementGesture(controller) {
   if (controller.onMovementGesture) controller.onMovementGesture();
+}
+
+function notifyAudioGestureStart(controller) {
+  if (controller.onAudioGestureStart) controller.onAudioGestureStart();
 }
 
 function notifyJoystickMovementIfNeeded(controller) {
