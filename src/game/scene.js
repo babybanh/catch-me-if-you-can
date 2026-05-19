@@ -21,7 +21,7 @@ export class CatchGameScene extends Phaser.Scene {
     this.load.image("character-banana", config.art.characters.banana.path);
     if (selectedPlayfield) this.load.image(`playfield-${selectedPlayfield.id}`, selectedPlayfield.path);
 
-    this.load.image("console-frame", config.art.consoleFramePath);
+    if (config.art.consoleFramePath) this.load.image("console-frame", config.art.consoleFramePath);
     for (const background of config.art.fullFrameBackgrounds) {
       if (!selectedFullFrame || String(background.id) !== String(selectedFullFrame.id)) {
         this.load.image(`full-frame-${background.id}`, background.path);
@@ -100,9 +100,10 @@ export class CatchGameScene extends Phaser.Scene {
     this.consoleFrame = this.add.image(
       config.game.designWidth / 2,
       config.game.designHeight / 2,
-      "console-frame"
+      `full-frame-${config.art.selectedFullFrameBackground}`
     )
       .setDisplaySize(config.game.designWidth, config.game.designHeight)
+      .setVisible(false)
       .setDepth(config.game.backgroundZ + 0.1);
 
     this.fullFrameBackground = this.add.image(
@@ -120,9 +121,10 @@ export class CatchGameScene extends Phaser.Scene {
     this.playfieldBackground = this.add.image(
       playArea.x + playArea.width / 2,
       playArea.y + playArea.height / 2,
-      "playfield-1"
+      `full-frame-${config.art.selectedFullFrameBackground}`
     )
       .setDisplaySize(playArea.width, playArea.height)
+      .setVisible(false)
       .setDepth(config.game.playAreaZ + 0.1);
 
     this.playAreaMaskShape = this.make.graphics({ x: 0, y: 0, add: false });

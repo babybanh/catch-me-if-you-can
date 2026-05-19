@@ -24,6 +24,9 @@ export function createInputController(config, shell) {
     const key = event.key.toLowerCase();
     const isFirstPress = !keysDown.has(key);
     keysDown.add(key);
+    if (isMovementKey(key)) {
+      window.dispatchEvent(new Event("catch-me-input-gesture"));
+    }
     if (config.controls.debugToggleKeys.includes(key) && isFirstPress) {
       event.preventDefault();
       controller.debugToggleRequested = true;
@@ -46,6 +49,7 @@ export function createInputController(config, shell) {
     joystick.baseX = point.x;
     joystick.baseY = point.y;
     updateJoystick(point, joystick, config);
+    window.dispatchEvent(new Event("catch-me-input-gesture"));
     shell.setPointerCapture(event.pointerId);
   });
 
@@ -102,6 +106,10 @@ export function createInputController(config, shell) {
   }
 
   return controller;
+}
+
+function isMovementKey(key) {
+  return ["arrowleft", "arrowright", "arrowup", "arrowdown", "a", "d", "w", "s"].includes(key);
 }
 
 function updateJoystick(point, joystick, config) {

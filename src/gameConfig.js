@@ -204,29 +204,18 @@ export const gameConfig = {
 
   art: {
     backgroundMode: "fullFrame",
-    consoleFrameEnabled: true,
-    consoleFramePath: "/assets/images/catch-me/backgrounds/console/handheld-pink-console-frame.png",
+    consoleFrameEnabled: false,
+    consoleFramePath: "",
     hitboxScaleStrength: 0.25,
     minHitboxScale: 0.75,
     maxHitboxScale: 2.4,
     selectedFullFrameBackground: "3",
     fullFrameBackgrounds: [
-      { id: "1", label: "Garden banana yard", path: "/assets/images/catch-me/backgrounds/full-frame/garden-banana-yard.png" },
-      { id: "2", label: "Sky loop field", path: "/assets/images/catch-me/backgrounds/full-frame/sky-loop-field.png" },
       { id: "3", label: "Sunny garden field", path: "/assets/images/catch-me/backgrounds/full-frame/sunny-garden-field.png" }
     ],
-    selectedPlayfieldBackground: "4",
-    playfieldLayerMode: "auto",
-    playfieldBackgrounds: [
-      { id: "1", label: "Jungle banana path", path: "/assets/images/catch-me/backgrounds/playfields/jungle-banana-path.png" },
-      { id: "2", label: "Park loop bench", path: "/assets/images/catch-me/backgrounds/playfields/park-loop-bench.png" },
-      { id: "3", label: "Bunny garden gate", path: "/assets/images/catch-me/backgrounds/playfields/bunny-garden-gate.png" },
-      { id: "4", label: "Jungle stone courtyard", path: "/assets/images/catch-me/backgrounds/playfields/jungle-stone-courtyard.png" },
-      { id: "5", label: "Console jungle path", path: "/assets/images/catch-me/backgrounds/playfields/console-jungle-path.png" },
-      { id: "6", label: "Log fence stone yard", path: "/assets/images/catch-me/backgrounds/playfields/log-fence-stone-yard.png" },
-      { id: "7", label: "Round park bench", path: "/assets/images/catch-me/backgrounds/playfields/round-park-bench.png" },
-      { id: "8", label: "Bunny yard flowers", path: "/assets/images/catch-me/backgrounds/playfields/bunny-yard-flowers.png" }
-    ],
+    selectedPlayfieldBackground: "",
+    playfieldLayerMode: "off",
+    playfieldBackgrounds: [],
     characters: {
       bunbun: {
         path: "/assets/images/catch-me/characters/bunbun.png",
