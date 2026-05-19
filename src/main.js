@@ -28,7 +28,15 @@ const phaserConfig = {
   parent: "game-root",
   width: gameConfig.game.designWidth,
   height: gameConfig.game.designHeight,
+  resolution: Math.min(window.devicePixelRatio || 1, 2),
   backgroundColor: "#efe0ac",
+  render: {
+    antialias: true,
+    antialiasGL: true,
+    pixelArt: false,
+    roundPixels: false,
+    powerPreference: "high-performance"
+  },
   scale: {
     mode: Phaser.Scale.FIT,
     autoCenter: Phaser.Scale.NO_CENTER,

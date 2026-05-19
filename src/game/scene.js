@@ -47,6 +47,7 @@ export class CatchGameScene extends Phaser.Scene {
     this.ui = runtime.ui;
     this.hasStartedOnce = false;
 
+    this.applySmoothTextureFilters();
     this.createWorld();
     this.createCharacters();
     this.connectUi();
@@ -55,6 +56,19 @@ export class CatchGameScene extends Phaser.Scene {
       document.body.classList.remove("is-loading");
       document.querySelector("#loading-screen")?.remove();
     });
+  }
+
+  applySmoothTextureFilters() {
+    const textureKeys = [
+      `full-frame-${this.configData.art.selectedFullFrameBackground}`,
+      ...Object.keys(this.configData.art.characters).map((name) => `character-${name}`)
+    ];
+    for (const key of textureKeys) {
+      const texture = this.textures.get(key);
+      if (texture?.setFilter) {
+        texture.setFilter(Phaser.Textures.FilterMode.LINEAR);
+      }
+    }
   }
 
   update(time, deltaMs) {

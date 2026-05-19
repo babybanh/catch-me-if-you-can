@@ -7,7 +7,8 @@ export function createInputController(config, shell) {
     knobX: 0,
     knobY: 0,
     directionX: 0,
-    directionY: 0
+    directionY: 0,
+    movementNotified: false
   };
 
   const controller = {
@@ -50,7 +51,7 @@ export function createInputController(config, shell) {
     joystick.baseX = point.x;
     joystick.baseY = point.y;
     updateJoystick(point, joystick, config);
-    notifyMovementGesture(controller);
+    notifyJoystickMovementIfNeeded(controller);
     shell.setPointerCapture(event.pointerId);
   });
 
@@ -58,6 +59,7 @@ export function createInputController(config, shell) {
     if (!joystick.active) return;
     const point = toDesignPoint(event, shell, config);
     updateJoystick(point, joystick, config);
+    notifyJoystickMovementIfNeeded(controller);
   });
 
   shell.addEventListener("pointerup", () => resetJoystick());
@@ -99,6 +101,7 @@ export function createInputController(config, shell) {
     joystick.directionY = 0;
     joystick.knobX = joystick.baseX;
     joystick.knobY = joystick.baseY;
+    joystick.movementNotified = false;
   }
 
   function resetMovement() {
@@ -111,6 +114,14 @@ export function createInputController(config, shell) {
 
 function notifyMovementGesture(controller) {
   if (controller.onMovementGesture) controller.onMovementGesture();
+}
+
+function notifyJoystickMovementIfNeeded(controller) {
+  const joystick = controller.joystick;
+  if (joystick.movementNotified) return;
+  if (Math.hypot(joystick.directionX, joystick.directionY) <= 0.01) return;
+  joystick.movementNotified = true;
+  notifyMovementGesture(controller);
 }
 
 function isMovementKey(key) {

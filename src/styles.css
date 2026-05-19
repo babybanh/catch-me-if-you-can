@@ -116,6 +116,7 @@ body.is-loading #ui-root {
 
 #game-root canvas {
   display: block;
+  image-rendering: auto;
 }
 
 #ui-root {
