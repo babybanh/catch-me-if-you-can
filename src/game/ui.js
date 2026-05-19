@@ -799,6 +799,12 @@ function createAudioController(config) {
   const audio = new Audio(config.audio.musicPath);
   audio.volume = config.audio.musicVolume;
   audio.preload = "auto";
+  audio.playsInline = true;
+  audio.load();
+
+  window.addEventListener("pointerdown", handleAudioGesture, { capture: true, passive: true });
+  window.addEventListener("touchstart", handleAudioGesture, { capture: true, passive: true });
+  window.addEventListener("keydown", handleAudioGesture, { capture: true });
 
   audio.addEventListener("ended", () => {
     if (!musicEnabled || !started) return;
@@ -822,6 +828,12 @@ function createAudioController(config) {
     audio.play().catch(() => {
       started = false;
     });
+  }
+
+  function handleAudioGesture() {
+    interactionUnlocked = true;
+    unlockAudioContext();
+    startFromMovement();
   }
 
   function startFromMovement() {
