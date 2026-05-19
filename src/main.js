@@ -13,7 +13,7 @@ const uiRoot = document.querySelector("#ui-root");
 const state = createInitialState(gameConfig);
 const input = createInputController(gameConfig, shell);
 const ui = createGameUi(gameConfig, uiRoot, state, input);
-window.addEventListener("catch-me-input-gesture", () => ui.startMusicFromMovement());
+input.onMovementGesture = () => ui.startMusicFromMovement();
 
 globalThis.catchGameRuntime = {
   config: gameConfig,

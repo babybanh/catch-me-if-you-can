@@ -802,10 +802,6 @@ function createAudioController(config) {
   audio.playsInline = true;
   audio.load();
 
-  window.addEventListener("pointerdown", handleAudioGesture, { capture: true, passive: true });
-  window.addEventListener("touchstart", handleAudioGesture, { capture: true, passive: true });
-  window.addEventListener("keydown", handleAudioGesture, { capture: true });
-
   audio.addEventListener("ended", () => {
     if (!musicEnabled || !started) return;
     window.clearTimeout(loopTimer);
@@ -828,12 +824,6 @@ function createAudioController(config) {
     audio.play().catch(() => {
       started = false;
     });
-  }
-
-  function handleAudioGesture() {
-    interactionUnlocked = true;
-    unlockAudioContext();
-    startFromMovement();
   }
 
   function startFromMovement() {
