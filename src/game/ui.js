@@ -829,6 +829,7 @@ function createAudioController(config) {
   let sfxEnabled = savedSfxPreference === null ? config.audio.sfxEnabled : savedSfxPreference === "true";
   let started = false;
   let interactionUnlocked = false;
+  let audioPrimed = false;
   let sfxPrimed = false;
   let loopTimer = null;
   let audioContext = null;
@@ -853,6 +854,7 @@ function createAudioController(config) {
       window.clearTimeout(loopTimer);
       audio.pause();
       started = false;
+      audioPrimed = false;
     }
   });
 
@@ -867,6 +869,7 @@ function createAudioController(config) {
   function prepareFromGesture() {
     interactionUnlocked = true;
     primeSfxPath();
+    primeMusicElement();
   }
 
   function startFromMovement() {
@@ -874,6 +877,7 @@ function createAudioController(config) {
     primeSfxPath();
     if (!musicEnabled || started || !config.audio.startOnFirstMovement) return;
     started = true;
+    audioPrimed = false;
     play();
   }
 
@@ -885,6 +889,7 @@ function createAudioController(config) {
       audio.pause();
       audio.currentTime = 0;
       started = false;
+      audioPrimed = false;
       audio.muted = false;
       audio.volume = config.audio.musicVolume;
     } else if (started) {
@@ -911,6 +916,23 @@ function createAudioController(config) {
       return;
     }
     playGeneratedSfx(name);
+  }
+
+  function primeMusicElement() {
+    if (audioPrimed || started || !musicEnabled || !config.audio.startOnFirstMovement) return;
+    audioPrimed = true;
+    audio.muted = true;
+    audio.volume = 0;
+    const prime = audio.play();
+    if (prime?.then) {
+      prime.catch(() => {
+        if (!started) {
+          audioPrimed = false;
+          audio.muted = false;
+          audio.volume = config.audio.musicVolume;
+        }
+      });
+    }
   }
 
   function previewSfx(name) {
@@ -983,6 +1005,7 @@ function createAudioController(config) {
   function primeSfxPath() {
     const context = unlockAudioContext();
     if (!context) return null;
+    scheduleSilentSfxUnlock(context);
 
     if (context.state === "running") {
       playSfxUnlockPulse(context);
@@ -995,6 +1018,18 @@ function createAudioController(config) {
       flushQueuedSfx();
     }).catch(() => undefined);
     return context;
+  }
+
+  function scheduleSilentSfxUnlock(context) {
+    if (sfxPrimed || !context) return;
+    try {
+      const source = context.createBufferSource();
+      source.buffer = context.createBuffer(1, 1, context.sampleRate);
+      source.connect(context.destination);
+      source.start(0);
+    } catch {
+      // Some mobile browsers are touchy during unlock. The oscillator fallback below still handles most cases.
+    }
   }
 
   function playSfxUnlockPulse(context) {

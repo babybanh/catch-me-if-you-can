@@ -49,6 +49,7 @@ export function createInputController(config, shell) {
     if (event.target.closest("[data-ui-control='true']")) return;
     const point = toDesignPoint(event, shell, config);
     if (!isInControlZone(point, config)) return;
+    event.preventDefault();
     notifyAudioGestureStart(controller);
     joystick.active = true;
     joystick.baseX = point.x;
