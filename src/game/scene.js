@@ -52,18 +52,10 @@ export class CatchGameScene extends Phaser.Scene {
     this.createCharacters();
     this.connectUi();
     this.resetGameToStart();
-    this.updateWorldArt();
-    this.syncSprites();
-    this.ui.update({ fps: 0 });
-    this.finishLoadingWhenIntroReady();
-  }
-
-  async finishLoadingWhenIntroReady() {
-    await waitForIntroImages();
-    await nextPaint();
-    await nextPaint();
-    document.body.classList.remove("is-loading");
-    document.querySelector("#loading-screen")?.remove();
+    requestAnimationFrame(() => {
+      document.body.classList.remove("is-loading");
+      document.querySelector("#loading-screen")?.remove();
+    });
   }
 
   applySmoothTextureFilters() {
@@ -1439,38 +1431,4 @@ function isTooCloseToPlayAreaCorner(point, playArea, radius = 0) {
     { x: playArea.x + playArea.width, y: playArea.y + playArea.height }
   ];
   return corners.some((corner) => distanceBetween(point, corner) < radius);
-}
-
-async function waitForIntroImages() {
-  const imageElements = [
-    ...document.querySelectorAll(".start-lifted-object"),
-    ...document.querySelectorAll("#game-shell")
-  ];
-  const decodeJobs = imageElements.map((element) => {
-    if (element instanceof HTMLImageElement) {
-      if (element.complete && element.naturalWidth > 0) return Promise.resolve();
-      return element.decode?.().catch(() => undefined) ?? Promise.resolve();
-    }
-    const backgroundImage = getComputedStyle(element).backgroundImage;
-    const match = backgroundImage.match(/url\(["']?([^"')]+)["']?\)/);
-    if (!match) return Promise.resolve();
-    return decodeImage(match[1]);
-  });
-  await Promise.allSettled(decodeJobs);
-}
-
-function decodeImage(src) {
-  return new Promise((resolve) => {
-    const image = new Image();
-    image.onload = resolve;
-    image.onerror = resolve;
-    image.src = src;
-    if (image.decode) {
-      image.decode().then(resolve).catch(resolve);
-    }
-  });
-}
-
-function nextPaint() {
-  return new Promise((resolve) => requestAnimationFrame(resolve));
 }
