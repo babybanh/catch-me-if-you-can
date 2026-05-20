@@ -579,8 +579,13 @@ export class CatchGameScene extends Phaser.Scene {
   findBananaSpawn(replacingIndex) {
     const config = this.configData;
     const playArea = config.playArea;
-    const margin = playArea.spawnMargin;
-    let fallback = null;
+    const marginX = Math.max(playArea.spawnMargin, config.banana.edgeSafeInsetX || 0);
+    const marginY = Math.max(playArea.spawnMargin, config.banana.edgeSafeInsetY || 0);
+    const fallback = {
+      x: playArea.x + playArea.width / 2,
+      y: playArea.y + playArea.height / 2,
+      ageMs: 0
+    };
     const centerSpawn = this.state.bananaCount < config.banana.centerSpawnForFirstBananas;
     const spawnBounds = centerSpawn
       ? {
@@ -590,10 +595,10 @@ export class CatchGameScene extends Phaser.Scene {
           maxY: playArea.y + playArea.height / 2 + config.banana.centerSpawnHeight / 2
         }
       : {
-          minX: playArea.x + margin,
-          maxX: playArea.x + playArea.width - margin,
-          minY: playArea.y + margin,
-          maxY: playArea.y + playArea.height - margin
+          minX: playArea.x + marginX,
+          maxX: playArea.x + playArea.width - marginX,
+          minY: playArea.y + marginY,
+          maxY: playArea.y + playArea.height - marginY
         };
 
     for (let attempt = 0; attempt < config.banana.spawnAttempts; attempt += 1) {
@@ -602,22 +607,19 @@ export class CatchGameScene extends Phaser.Scene {
         y: Phaser.Math.Between(spawnBounds.minY, spawnBounds.maxY),
         ageMs: 0
       };
-      fallback = candidate;
       if (this.isValidBananaPosition(candidate, replacingIndex)) {
         return candidate;
       }
     }
 
-    return fallback || {
-      x: playArea.x + playArea.width / 2,
-      y: playArea.y + playArea.height / 2,
-      ageMs: 0
-    };
+    return fallback;
   }
 
   isValidBananaPosition(candidate, replacingIndex) {
     const config = this.configData;
     const lead = this.getLeadCharacter();
+
+    if (isTooCloseToPlayAreaCorner(candidate, config.playArea, config.banana.cornerSafeRadius)) return false;
 
     if (distanceBetween(candidate, lead) < config.banana.minDistanceFromPlayer) return false;
 
@@ -682,9 +684,13 @@ export class CatchGameScene extends Phaser.Scene {
   findBombSpawn() {
     const config = this.configData;
     const playArea = config.playArea;
-    const insetX = Math.max(playArea.spawnMargin, config.bomb.centerSpawnInsetX);
-    const insetY = Math.max(playArea.spawnMargin, config.bomb.centerSpawnInsetY);
-    let fallback = null;
+    const insetX = Math.max(playArea.spawnMargin, config.bomb.centerSpawnInsetX, config.bomb.edgeSafeInsetX || 0);
+    const insetY = Math.max(playArea.spawnMargin, config.bomb.centerSpawnInsetY, config.bomb.edgeSafeInsetY || 0);
+    const fallback = {
+      x: playArea.x + playArea.width / 2,
+      y: playArea.y + playArea.height / 2,
+      ageMs: 0
+    };
 
     for (let attempt = 0; attempt < config.bomb.spawnAttempts; attempt += 1) {
       const candidate = {
@@ -692,19 +698,15 @@ export class CatchGameScene extends Phaser.Scene {
         y: Phaser.Math.Between(playArea.y + insetY, playArea.y + playArea.height - insetY),
         ageMs: 0
       };
-      fallback = candidate;
       if (this.isValidBombPosition(candidate)) return candidate;
     }
 
-    return fallback || {
-      x: playArea.x + playArea.width / 2,
-      y: playArea.y + playArea.height / 2,
-      ageMs: 0
-    };
+    return fallback;
   }
 
   isValidBombPosition(candidate) {
     const config = this.configData;
+    if (isTooCloseToPlayAreaCorner(candidate, config.playArea, config.bomb.cornerSafeRadius)) return false;
     if (distanceBetween(candidate, this.getLeadCharacter()) < config.bomb.minDistanceFromPlayer) return false;
     if (this.state.bunActive && distanceBetween(candidate, this.state.follower) < config.bomb.minDistanceFromPlayer) return false;
     if (this.state.bananas.some((banana) => distanceBetween(candidate, banana) < config.bomb.minDistanceFromBanana)) return false;
@@ -1418,4 +1420,15 @@ function clampToPlayArea(value, min, max) {
 
 function distanceBetween(a, b) {
   return Math.hypot(a.x - b.x, a.y - b.y);
+}
+
+function isTooCloseToPlayAreaCorner(point, playArea, radius = 0) {
+  if (!radius || radius <= 0) return false;
+  const corners = [
+    { x: playArea.x, y: playArea.y },
+    { x: playArea.x + playArea.width, y: playArea.y },
+    { x: playArea.x, y: playArea.y + playArea.height },
+    { x: playArea.x + playArea.width, y: playArea.y + playArea.height }
+  ];
+  return corners.some((corner) => distanceBetween(point, corner) < radius);
 }
