@@ -5,6 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
     <title>Catch Me If You Can!</title>
     <link rel="preload" as="image" href="/assets/images/catch-me/backgrounds/full-frame/sunny-garden-field.png" fetchpriority="high" />
+    <link rel="preload" as="image" href="/assets/images/catch-me/characters/bunbun.png" fetchpriority="high" />
+    <link rel="preload" as="image" href="/assets/images/catch-me/characters/banana.png" fetchpriority="high" />
     <style>
       :root {
         background: #efe0ac;
@@ -69,22 +71,6 @@
         visibility: hidden;
       }
 
-      .loading-panel {
-        position: absolute;
-        left: calc((360 / 720) * 100%);
-        top: calc((610 / 840) * 100%);
-        width: calc((500 / 720) * 100%);
-        z-index: 1;
-        transform: translate(-50%, -50%);
-        padding: 9px 15px;
-        border-radius: 18px;
-        border: 3px solid rgba(255, 231, 107, 0.95);
-        background: rgba(255, 255, 255, 0.86);
-        color: #493127;
-        text-align: center;
-        font: 600 15px "Avenir Next", "Trebuchet MS", Arial, sans-serif;
-        box-shadow: 0 8px 22px rgba(103, 65, 75, 0.16);
-      }
     </style>
     <script>
       (() => {
@@ -98,9 +84,7 @@
   </head>
   <body class="is-loading">
     <div id="game-shell">
-      <div id="loading-screen">
-        <div class="loading-panel">Loading...</div>
-      </div>
+      <div id="loading-screen" aria-hidden="true"></div>
       <div id="game-root"></div>
       <div id="ui-root" aria-live="polite"></div>
     </div>
