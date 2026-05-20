@@ -460,7 +460,7 @@ export const gameConfig = {
   },
 
   concept: {
-    imagePath: "/assets/images/catch-me/concept/game-concept.png",
+    imagePath: "/assets/images/catch-me/concept/game-concept.webp",
     title: "Original Game Idea",
     subtitle: "Kendall's Catch Me If You Can concept",
     buttonLabel: "Tap title to view the concept",

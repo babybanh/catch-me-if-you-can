@@ -457,10 +457,10 @@ body.is-loading #ui-root {
   z-index: 160;
   display: grid;
   place-items: center;
-  padding: 36px;
+  padding: 34px;
   pointer-events: auto;
-  background: rgba(70, 43, 48, 0.24);
-  backdrop-filter: blur(8px) saturate(1.08);
+  background: rgba(84, 45, 76, 0.36);
+  backdrop-filter: blur(4px) saturate(1.08);
 }
 
 .soft-modal-card {
@@ -468,12 +468,14 @@ body.is-loading #ui-root {
   max-width: 560px;
   max-height: 760px;
   overflow: auto;
-  padding: 22px;
-  border-radius: 26px;
-  color: #3a2820;
-  background: rgba(255, 248, 240, 0.94);
-  border: 4px solid rgba(255, 255, 255, 0.95);
-  box-shadow: 0 18px 44px rgba(63, 42, 38, 0.24);
+  padding: 24px 28px 26px;
+  border-radius: 28px 30px 26px 32px;
+  color: #493127;
+  background:
+    radial-gradient(circle at 22% 14%, rgba(255, 255, 255, 0.92), transparent 30%),
+    linear-gradient(rgba(255, 252, 237, 0.98), rgba(255, 238, 224, 0.97));
+  border: 0;
+  box-shadow: 0 28px 54px rgba(103, 65, 75, 0.24), inset 0 0 0 1px rgba(255, 255, 255, 0.78);
   text-align: center;
 }
 
@@ -489,27 +491,27 @@ body.is-loading #ui-root {
   color: #3a2820;
   background: #ffe76b;
   box-shadow: 0 3px 0 #e7b84b;
-  font-weight: 600;
+  font-weight: 750;
   line-height: 34px;
   cursor: pointer;
 }
 
 .modal-title {
   display: block;
-  margin: 10px auto 18px;
-  max-width: 360px;
+  margin: 8px auto 20px;
+  max-width: 390px;
   font-family: ui-rounded, "Trebuchet MS", "Avenir Next", Arial, sans-serif;
-  font-size: 27px;
-  font-weight: 600;
-  line-height: 1.1;
-  color: #7a5a38;
+  font-size: 28px;
+  font-weight: 850;
+  line-height: 1;
+  color: #cf5f86;
   text-decoration: none;
   text-align: center;
 }
 
 .modal-subtitle {
   margin: 0 42px 16px;
-  color: #6a4139;
+  color: #8b5a70;
   font-size: 15px;
   font-weight: 560;
   line-height: 1.25;
@@ -517,10 +519,41 @@ body.is-loading #ui-root {
 
 .concept-image {
   display: block;
+  width: min(var(--concept-image-width, 430px), 100%);
+  height: auto;
   max-width: 100%;
+  margin: 0 auto;
   object-fit: contain;
   border-radius: 18px;
   box-shadow: 0 8px 22px rgba(103, 65, 75, 0.16);
+}
+
+.concept-modal .soft-modal-card {
+  display: flex;
+  width: 560px;
+  max-width: calc(100% - 36px);
+  flex-direction: column;
+  align-items: center;
+  padding: 26px 34px 30px;
+  border-radius: 28px 30px 26px 32px;
+}
+
+.concept-modal .modal-title {
+  display: block;
+  max-width: 430px;
+  margin: 12px auto 10px;
+  padding: 0 42px;
+  color: #cf5f86;
+  font-size: 28px;
+  font-weight: 850;
+}
+
+.concept-modal .modal-subtitle {
+  margin: 0 42px 18px;
+  color: #8b5a70;
+  font-size: 18px;
+  font-weight: 750;
+  line-height: 1.2;
 }
 
 .modal-copy {
@@ -544,39 +577,46 @@ body.is-loading #ui-root {
 .credits-modal .soft-modal-card {
   width: 500px;
   max-width: calc(100% - 36px);
-  padding: 26px 30px 28px;
-  background: rgba(255, 251, 224, 0.96);
-  border-color: rgba(255, 255, 255, 0.96);
-  box-shadow: 0 16px 36px rgba(154, 113, 52, 0.18);
+  padding: 30px 34px 28px;
 }
 
 .credits-modal .modal-subtitle {
   display: none;
 }
 
+.credits-modal .modal-title {
+  color: #cf5f86;
+  font-size: 26px;
+  font-weight: 850;
+}
+
 .credits-copy {
-  margin: 18px auto;
-  max-width: 390px;
-  color: #806353;
+  margin: 18px auto 0;
+  max-width: 400px;
+  color: #7d5266;
   font-size: 16px;
-  font-weight: 560;
-  line-height: 1.38;
+  font-weight: 750;
+  line-height: 1.35;
   text-align: center;
 }
 
+.credits-copy span,
 .credits-copy a {
-  color: #b1792f;
-  display: inline-block;
+  display: block;
+}
+
+.credits-copy a {
+  color: #e39b25;
   margin-top: 2px;
-  font-size: 20px;
-  font-weight: 650;
+  font-size: 19px;
+  font-weight: 850;
   text-decoration: none;
 }
 
 .credits-playlist-link {
   display: inline-block;
   margin: 6px 0 4px;
-  color: #7d4b3f;
+  color: #cf5f86;
   font-size: 14px;
   font-weight: 650;
   text-decoration: underline;

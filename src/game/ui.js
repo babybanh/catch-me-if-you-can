@@ -33,6 +33,7 @@ export function createGameUi(config, root, state, input) {
   createHud(elements, layer, config, state, audio);
   elements.title.addEventListener("click", showConceptOverlay);
   elements.credits.addEventListener("click", showCreditsOverlay);
+  warmOptionalImage(config.concept.imagePath);
   createJoystick(elements, layer, config);
   createTutorialPrompt(elements, layer, config);
   createDebugPanel(elements, layer, config);
@@ -204,10 +205,12 @@ export function createGameUi(config, root, state, input) {
       body: (modal) => {
         const image = document.createElement("img");
         image.className = "concept-image";
+        image.decoding = "async";
+        image.loading = "eager";
         image.src = config.concept.imagePath;
         image.alt = "Original Catch Me If You Can game concept artwork";
-        image.style.width = px(config.concept.imageWidth);
-        image.style.height = px(config.concept.imageHeight);
+        image.style.setProperty("--concept-image-width", px(config.concept.imageWidth));
+        image.style.setProperty("--concept-image-max-height", px(config.concept.imageHeight));
         modal.append(image);
       }
     });
@@ -222,23 +225,26 @@ export function createGameUi(config, root, state, input) {
       body: (modal) => {
         const original = document.createElement("p");
         original.className = "credits-copy";
-        original.innerHTML = `Original music and characters by<br><a href="${config.credits.musicUrl}" target="_blank" rel="noreferrer">${config.credits.studentName}</a>`;
+        original.innerHTML = `<span>Original music and characters by</span><a href="${config.credits.musicUrl}" target="_blank" rel="noreferrer">${config.credits.studentName}</a>`;
 
         const design = document.createElement("p");
         design.className = "credits-copy";
-        design.innerHTML = `Game design and development by<br><a href="mailto:${config.credits.designerEmail}">${config.credits.designerName}</a>`;
+        design.innerHTML = `<span>Game design and development by</span><a href="mailto:${config.credits.designerEmail}">${config.credits.designerName}</a>`;
 
         modal.append(original, design);
       }
     });
   }
 
-  function showSoftModal({ className, title, titleHref, subtitle, body }) {
+  function showSoftModal({ className, title, titleHref, subtitle, ariaLabel, body }) {
     if (elements.softModal) elements.softModal.remove();
 
     const overlay = document.createElement("div");
     overlay.className = `soft-modal-overlay ${className}`;
     overlay.dataset.uiControl = "true";
+    overlay.setAttribute("role", "dialog");
+    overlay.setAttribute("aria-modal", "true");
+    overlay.setAttribute("aria-label", title || ariaLabel || "Dialog");
 
     const modal = document.createElement("div");
     modal.className = "soft-modal-card";
@@ -262,11 +268,14 @@ export function createGameUi(config, root, state, input) {
       heading.rel = "noreferrer";
     }
 
-    const sub = document.createElement("div");
-    sub.className = "modal-subtitle";
-    sub.textContent = subtitle;
-
-    modal.append(close, heading, sub);
+    modal.append(close);
+    if (title) modal.append(heading);
+    if (subtitle) {
+      const sub = document.createElement("div");
+      sub.className = "modal-subtitle";
+      sub.textContent = subtitle;
+      modal.append(sub);
+    }
     body(modal);
     overlay.append(modal);
     overlay.addEventListener("click", (event) => {
@@ -279,6 +288,25 @@ export function createGameUi(config, root, state, input) {
     elements.softModal = overlay;
   }
 
+}
+
+function warmOptionalImage(src) {
+  if (!src || typeof window === "undefined") return;
+
+  const warm = () => {
+    const image = new Image();
+    image.decoding = "async";
+    image.fetchPriority = "low";
+    image.src = src;
+    image.decode?.().catch(() => undefined);
+  };
+
+  if ("requestIdleCallback" in window) {
+    window.requestIdleCallback(warm, { timeout: 1500 });
+    return;
+  }
+
+  window.setTimeout(warm, 350);
 }
 
 function createHud(elements, layer, config, state, audio) {
