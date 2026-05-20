@@ -818,6 +818,7 @@ function createAudioController(config) {
       window.clearTimeout(loopTimer);
       audio.pause();
       started = false;
+      audioPrimed = false;
     }
   });
 
@@ -832,38 +833,26 @@ function createAudioController(config) {
   function prepareFromGesture() {
     interactionUnlocked = true;
     unlockAudioContext();
-    if (audioPrimed) return;
+    if (audioPrimed || started || !musicEnabled || !config.audio.startOnFirstMovement) return;
     audioPrimed = true;
 
-    const wasMuted = audio.muted;
     audio.muted = true;
     audio.volume = 0;
     const prime = audio.play();
     if (prime?.then) {
-      prime
-        .then(() => {
-          if (!started) {
-            audio.pause();
-            audio.currentTime = 0;
-          }
-          audio.muted = wasMuted;
+      prime.catch(() => {
+        if (!started) {
+          audioPrimed = false;
+          audio.muted = false;
           audio.volume = config.audio.musicVolume;
-        })
-        .catch(() => {
-          audio.muted = wasMuted;
-          audio.volume = config.audio.musicVolume;
-          if (!started) audioPrimed = false;
-        });
-    } else {
-      audio.pause();
-      audio.currentTime = 0;
-      audio.muted = wasMuted;
-      audio.volume = config.audio.musicVolume;
+        }
+      });
     }
   }
 
   function startFromMovement() {
-    prepareFromGesture();
+    interactionUnlocked = true;
+    unlockAudioContext();
     if (!musicEnabled || started || !config.audio.startOnFirstMovement) return;
     started = true;
     play();
@@ -876,6 +865,10 @@ function createAudioController(config) {
       window.clearTimeout(loopTimer);
       audio.pause();
       audio.currentTime = 0;
+      started = false;
+      audioPrimed = false;
+      audio.muted = false;
+      audio.volume = config.audio.musicVolume;
     } else if (started) {
       play();
     }
