@@ -803,6 +803,7 @@ function createAudioController(config) {
   let interactionUnlocked = false;
   let audioPrimed = false;
   let loopTimer = null;
+  let startTimer = null;
   let audioContext = null;
   const audio = new Audio(config.audio.musicPath);
   audio.volume = config.audio.musicVolume;
@@ -822,6 +823,7 @@ function createAudioController(config) {
     if (!document.hidden) return;
     if (!audio.paused) {
       window.clearTimeout(loopTimer);
+      window.clearTimeout(startTimer);
       audio.pause();
       started = false;
       audioPrimed = false;
@@ -861,7 +863,10 @@ function createAudioController(config) {
     unlockAudioContext();
     if (!musicEnabled || started || !config.audio.startOnFirstMovement) return;
     started = true;
-    play();
+    window.clearTimeout(startTimer);
+    startTimer = window.setTimeout(() => {
+      if (musicEnabled && started) play();
+    }, config.audio.startDelayMs || 0);
   }
 
   function toggleMusic() {
@@ -869,6 +874,7 @@ function createAudioController(config) {
     localStorage.setItem(config.audio.storageKey, String(musicEnabled));
     if (!musicEnabled) {
       window.clearTimeout(loopTimer);
+      window.clearTimeout(startTimer);
       audio.pause();
       audio.currentTime = 0;
       started = false;

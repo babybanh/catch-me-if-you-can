@@ -199,6 +199,7 @@ export const gameConfig = {
     musicPath: "/assets/audio/music/catch-me-if-you-can-theme.mp3",
     musicVolume: 0.5,
     loopGapMs: 1000,
+    startDelayMs: 500,
     startOnFirstMovement: true,
     storageKey: "catchMeMusicEnabled",
     sfxEnabled: true,
