@@ -829,9 +829,10 @@ function createAudioController(config) {
   let sfxEnabled = savedSfxPreference === null ? config.audio.sfxEnabled : savedSfxPreference === "true";
   let started = false;
   let interactionUnlocked = false;
-  let audioPrimed = false;
+  let sfxPrimed = false;
   let loopTimer = null;
   let audioContext = null;
+  const queuedSfx = [];
   const audio = new Audio(config.audio.musicPath);
   audio.volume = config.audio.musicVolume;
   audio.preload = "auto";
@@ -852,7 +853,6 @@ function createAudioController(config) {
       window.clearTimeout(loopTimer);
       audio.pause();
       started = false;
-      audioPrimed = false;
     }
   });
 
@@ -866,27 +866,12 @@ function createAudioController(config) {
 
   function prepareFromGesture() {
     interactionUnlocked = true;
-    unlockAudioContext();
-    if (audioPrimed || started || !musicEnabled || !config.audio.startOnFirstMovement) return;
-    audioPrimed = true;
-
-    audio.muted = true;
-    audio.volume = 0;
-    const prime = audio.play();
-    if (prime?.then) {
-      prime.catch(() => {
-        if (!started) {
-          audioPrimed = false;
-          audio.muted = false;
-          audio.volume = config.audio.musicVolume;
-        }
-      });
-    }
+    primeSfxPath();
   }
 
   function startFromMovement() {
     interactionUnlocked = true;
-    unlockAudioContext();
+    primeSfxPath();
     if (!musicEnabled || started || !config.audio.startOnFirstMovement) return;
     started = true;
     play();
@@ -900,7 +885,6 @@ function createAudioController(config) {
       audio.pause();
       audio.currentTime = 0;
       started = false;
-      audioPrimed = false;
       audio.muted = false;
       audio.volume = config.audio.musicVolume;
     } else if (started) {
@@ -921,11 +905,17 @@ function createAudioController(config) {
 
   function playSfx(name) {
     if (!sfxEnabled || !interactionUnlocked) return;
+    if (!isSfxReady()) {
+      queuedSfx.push(name);
+      primeSfxPath();
+      return;
+    }
     playGeneratedSfx(name);
   }
 
   function previewSfx(name) {
     interactionUnlocked = true;
+    primeSfxPath();
     playGeneratedSfx(name);
   }
 
@@ -986,8 +976,53 @@ function createAudioController(config) {
     const AudioContextClass = window.AudioContext || window.webkitAudioContext;
     if (!AudioContextClass) return null;
     if (!audioContext) audioContext = new AudioContextClass();
-    if (audioContext.state === "suspended") audioContext.resume();
+    if (audioContext.state === "suspended") audioContext.resume()?.then(flushQueuedSfx).catch(() => undefined);
     return audioContext;
+  }
+
+  function primeSfxPath() {
+    const context = unlockAudioContext();
+    if (!context) return null;
+
+    if (context.state === "running") {
+      playSfxUnlockPulse(context);
+      flushQueuedSfx();
+      return context;
+    }
+
+    context.resume?.().then(() => {
+      playSfxUnlockPulse(context);
+      flushQueuedSfx();
+    }).catch(() => undefined);
+    return context;
+  }
+
+  function playSfxUnlockPulse(context) {
+    if (sfxPrimed || !context || context.state !== "running") return;
+    sfxPrimed = true;
+    const oscillator = context.createOscillator();
+    const gain = context.createGain();
+    const now = context.currentTime;
+    oscillator.type = "sine";
+    oscillator.frequency.setValueAtTime(220, now);
+    gain.gain.setValueAtTime(0.00001, now);
+    gain.gain.setValueAtTime(0.00001, now + 0.025);
+    oscillator.connect(gain);
+    gain.connect(context.destination);
+    oscillator.start(now);
+    oscillator.stop(now + 0.03);
+  }
+
+  function isSfxReady() {
+    return Boolean(audioContext && audioContext.state === "running");
+  }
+
+  function flushQueuedSfx() {
+    if (!isSfxReady() || !sfxEnabled || !interactionUnlocked) return;
+    const nextSounds = queuedSfx.splice(0, queuedSfx.length);
+    for (const name of nextSounds) {
+      playGeneratedSfx(name);
+    }
   }
 
   function resetToConfig() {
