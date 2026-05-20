@@ -195,6 +195,17 @@ export const gameConfig = {
     zIndex: 35
   },
 
+  hitPopup: {
+    popupDurationMs: 850,
+    popupRise: 38,
+    offsetY: 48,
+    fontSize: 22,
+    color: "#f0656f",
+    stroke: "#fff7f3",
+    strokeThickness: 5,
+    zIndex: 35
+  },
+
   audio: {
     musicPath: "/assets/audio/music/catch-me-if-you-can-theme.mp3",
     musicVolume: 0.5,

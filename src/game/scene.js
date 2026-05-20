@@ -50,6 +50,7 @@ export class CatchGameScene extends Phaser.Scene {
     this.applySmoothTextureFilters();
     this.createWorld();
     this.createCharacters();
+    this.createEffectPopups();
     this.connectUi();
     this.resetGameToStart();
     this.updateWorldArt();
@@ -219,6 +220,39 @@ export class CatchGameScene extends Phaser.Scene {
       }).setOrigin(0.5)
     ]).setDepth(config.secondGorilla.zIndex);
     this.secondGorilla.setVisible(false);
+  }
+
+  createEffectPopups() {
+    this.hitPopups = {
+      1: this.createHitPopup(1),
+      2: this.createHitPopup(2)
+    };
+    this.warmupEffectPopups();
+  }
+
+  warmupEffectPopups() {
+    this.time.delayedCall(90, () => {
+      for (const popup of Object.values(this.hitPopups)) {
+        popup.setVisible(false).setAlpha(0);
+      }
+    });
+  }
+
+  createHitPopup(damage) {
+    const config = this.configData.hitPopup;
+    const label = `-${damage} ${damage === 1 ? "Heart" : "Hearts"}`;
+    return this.add.text(0, 0, label, {
+      fontFamily: "Trebuchet MS, Arial",
+      fontSize: `${config.fontSize}px`,
+      fontStyle: "bold",
+      color: config.color,
+      stroke: config.stroke,
+      strokeThickness: config.strokeThickness
+    })
+      .setOrigin(0.5)
+      .setDepth(config.zIndex)
+      .setVisible(false)
+      .setAlpha(0);
   }
 
   connectUi() {
@@ -1293,6 +1327,7 @@ export class CatchGameScene extends Phaser.Scene {
   damagePlayer(now, damage = this.configData.gorilla.damage) {
     this.playSfx("bunnyHit");
     this.state.hearts = Math.max(0, this.state.hearts - damage);
+    this.showHitPopup(damage);
     this.state.invincibleUntil = now + this.configData.player.invincibilityMs;
 
     if (this.state.hearts <= 0) {
@@ -1407,6 +1442,31 @@ export class CatchGameScene extends Phaser.Scene {
       duration: config.combo.popupDurationMs,
       ease: "Sine.easeOut",
       onComplete: () => popup.destroy()
+    });
+  }
+
+  showHitPopup(damage) {
+    const config = this.configData.hitPopup;
+    const lead = this.getLeadCharacter();
+    const key = damage === 1 ? 1 : 2;
+    const popup = this.hitPopups?.[key];
+    if (!popup) return;
+
+    popup.setText(`-${damage} ${damage === 1 ? "Heart" : "Hearts"}`);
+    this.tweens.killTweensOf(popup);
+    popup
+      .setPosition(lead.x, lead.y - config.offsetY)
+      .setAlpha(1)
+      .setScale(1)
+      .setVisible(true);
+
+    this.tweens.add({
+      targets: popup,
+      y: popup.y - config.popupRise,
+      alpha: 0,
+      duration: config.popupDurationMs,
+      ease: "Sine.easeOut",
+      onComplete: () => popup.setVisible(false)
     });
   }
 
