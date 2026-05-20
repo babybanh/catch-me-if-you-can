@@ -53,10 +53,8 @@ export class CatchGameScene extends Phaser.Scene {
     this.connectUi();
     this.resetGameToStart();
     requestAnimationFrame(() => {
-      requestAnimationFrame(() => {
-        document.body.classList.remove("is-loading");
-        document.querySelector("#loading-screen")?.remove();
-      });
+      document.body.classList.remove("is-loading");
+      document.querySelector("#loading-screen")?.remove();
     });
   }
 

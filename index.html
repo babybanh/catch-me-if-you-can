@@ -27,6 +27,10 @@
         visibility: hidden;
       }
 
+      html.loading-art-ready body.is-loading #game-shell {
+        visibility: visible;
+      }
+
       #game-shell {
         position: relative;
         width: min(100dvw, calc(100dvh * 0.857142857));
@@ -41,23 +45,23 @@
       }
 
       #loading-screen {
-        position: fixed;
+        position: absolute;
         inset: 0;
-        z-index: 9999;
+        z-index: 300;
         overflow: hidden;
-        pointer-events: none;
       }
 
       #loading-screen::before {
         content: "";
         position: absolute;
-        inset: -28px;
+        inset: 0;
         background-color: #efe0ac;
         background-image: url("/assets/images/catch-me/backgrounds/full-frame/sunny-garden-field.png");
         background-position: center;
-        background-size: cover;
+        background-size: 100% 100%;
         background-repeat: no-repeat;
         filter: blur(6px) saturate(1.04);
+        transform: scale(1.015);
       }
 
       body.is-loading #game-root,
@@ -67,9 +71,9 @@
 
       .loading-panel {
         position: absolute;
-        left: 50%;
-        top: 72%;
-        width: min(500px, 70vw);
+        left: calc((360 / 720) * 100%);
+        top: calc((610 / 840) * 100%);
+        width: calc((500 / 720) * 100%);
         z-index: 1;
         transform: translate(-50%, -50%);
         padding: 9px 15px;
@@ -93,10 +97,10 @@
     </script>
   </head>
   <body class="is-loading">
-    <div id="loading-screen">
-      <div class="loading-panel">Loading...</div>
-    </div>
     <div id="game-shell">
+      <div id="loading-screen">
+        <div class="loading-panel">Loading...</div>
+      </div>
       <div id="game-root"></div>
       <div id="ui-root" aria-live="polite"></div>
     </div>
