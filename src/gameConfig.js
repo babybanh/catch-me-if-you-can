@@ -205,7 +205,19 @@ export const gameConfig = {
     sfxVolume: 0.45,
     sfxStorageKey: "catchMeSfxEnabled",
     bananaSfxPreset: "softChime",
-    bombSfxPreset: "softBoom"
+    bombSfxPreset: "softBoom",
+    sfxFiles: {
+      bananaPickup: {
+        softChime: "/assets/audio/sfx/banana-soft-chime.wav",
+        bubblePop: "/assets/audio/sfx/banana-bubble-pop.wav",
+        tinyBell: "/assets/audio/sfx/banana-tiny-bell.wav"
+      },
+      bombExplosion: {
+        softBoom: "/assets/audio/sfx/bomb-soft-boom.wav",
+        cartoonPop: "/assets/audio/sfx/bomb-cartoon-pop.wav",
+        lowThump: "/assets/audio/sfx/bomb-low-thump.wav"
+      }
+    }
   },
 
   art: {

@@ -831,14 +831,16 @@ function createAudioController(config) {
   let interactionUnlocked = false;
   let audioPrimed = false;
   let sfxPrimed = false;
+  let sfxPrimePending = false;
   let loopTimer = null;
-  let audioContext = null;
   const queuedSfx = [];
+  const sfxPlayers = new Map();
   const audio = new Audio(config.audio.musicPath);
   audio.volume = config.audio.musicVolume;
   audio.preload = "auto";
   audio.playsInline = true;
   audio.load();
+  preloadSfxFiles();
 
   audio.addEventListener("ended", () => {
     if (!musicEnabled || !started) return;
@@ -915,7 +917,7 @@ function createAudioController(config) {
       primeSfxPath();
       return;
     }
-    playGeneratedSfx(name);
+    playFileSfx(name);
   }
 
   function primeMusicElement() {
@@ -938,126 +940,100 @@ function createAudioController(config) {
   function previewSfx(name) {
     interactionUnlocked = true;
     primeSfxPath();
-    playGeneratedSfx(name);
-  }
-
-  function playGeneratedSfx(name) {
-    const sfx = config.sfx[name];
-    if (!sfx) return;
-    const presetName = name === "bananaPickup" ? config.audio.bananaSfxPreset : config.audio.bombSfxPreset;
-    const preset = sfx.presets?.[presetName];
-    if (!preset) return;
-    const context = unlockAudioContext();
-    if (!context) return;
-
-    const now = context.currentTime;
-    for (const note of preset.notes || []) {
-      const start = now + (note.delayMs || 0) / 1000;
-      const duration = note.durationMs / 1000;
-      const oscillator = context.createOscillator();
-      const gain = context.createGain();
-      oscillator.type = note.type;
-      oscillator.frequency.setValueAtTime(note.frequency, start);
-      if (note.endFrequency) {
-        oscillator.frequency.exponentialRampToValueAtTime(note.endFrequency, start + duration);
-      }
-      gain.gain.setValueAtTime(0.0001, start);
-      gain.gain.exponentialRampToValueAtTime(Math.max(0.0001, config.audio.sfxVolume * note.volume), start + 0.012);
-      gain.gain.exponentialRampToValueAtTime(0.0001, start + duration);
-      oscillator.connect(gain);
-      gain.connect(context.destination);
-      oscillator.start(start);
-      oscillator.stop(start + duration + 0.03);
-    }
-
-    if (preset.noise) {
-      playNoise(context, now, preset.noise, config.audio.sfxVolume);
-    }
-  }
-
-  function playNoise(context, start, noise, masterVolume) {
-    const duration = noise.durationMs / 1000;
-    const sampleCount = Math.max(1, Math.floor(context.sampleRate * duration));
-    const buffer = context.createBuffer(1, sampleCount, context.sampleRate);
-    const data = buffer.getChannelData(0);
-    for (let index = 0; index < sampleCount; index += 1) {
-      data[index] = (Math.random() * 2 - 1) * (1 - index / sampleCount);
-    }
-    const source = context.createBufferSource();
-    const gain = context.createGain();
-    gain.gain.setValueAtTime(Math.max(0.0001, masterVolume * noise.volume), start);
-    gain.gain.exponentialRampToValueAtTime(0.0001, start + duration);
-    source.buffer = buffer;
-    source.connect(gain);
-    gain.connect(context.destination);
-    source.start(start);
-    source.stop(start + duration);
-  }
-
-  function unlockAudioContext() {
-    const AudioContextClass = window.AudioContext || window.webkitAudioContext;
-    if (!AudioContextClass) return null;
-    if (!audioContext) audioContext = new AudioContextClass();
-    if (audioContext.state === "suspended") audioContext.resume()?.then(flushQueuedSfx).catch(() => undefined);
-    return audioContext;
+    playFileSfx(name);
   }
 
   function primeSfxPath() {
-    const context = unlockAudioContext();
-    if (!context) return null;
-    scheduleSilentSfxUnlock(context);
-
-    if (context.state === "running") {
-      playSfxUnlockPulse(context);
+    if (sfxPrimed) {
       flushQueuedSfx();
-      return context;
+      return;
     }
+    if (sfxPrimePending) return;
+    const players = getPrimeableSfxPlayers();
+    if (!players.length) return;
+    sfxPrimePending = true;
 
-    context.resume?.().then(() => {
-      playSfxUnlockPulse(context);
+    Promise.allSettled(players.map(primeSfxPlayer)).then(() => {
+      sfxPrimed = true;
+      sfxPrimePending = false;
       flushQueuedSfx();
-    }).catch(() => undefined);
-    return context;
-  }
-
-  function scheduleSilentSfxUnlock(context) {
-    if (sfxPrimed || !context) return;
-    try {
-      const source = context.createBufferSource();
-      source.buffer = context.createBuffer(1, 1, context.sampleRate);
-      source.connect(context.destination);
-      source.start(0);
-    } catch {
-      // Some mobile browsers are touchy during unlock. The oscillator fallback below still handles most cases.
-    }
-  }
-
-  function playSfxUnlockPulse(context) {
-    if (sfxPrimed || !context || context.state !== "running") return;
-    sfxPrimed = true;
-    const oscillator = context.createOscillator();
-    const gain = context.createGain();
-    const now = context.currentTime;
-    oscillator.type = "sine";
-    oscillator.frequency.setValueAtTime(220, now);
-    gain.gain.setValueAtTime(0.00001, now);
-    gain.gain.setValueAtTime(0.00001, now + 0.025);
-    oscillator.connect(gain);
-    gain.connect(context.destination);
-    oscillator.start(now);
-    oscillator.stop(now + 0.03);
+    });
   }
 
   function isSfxReady() {
-    return Boolean(audioContext && audioContext.state === "running");
+    return sfxPrimed;
   }
 
   function flushQueuedSfx() {
     if (!isSfxReady() || !sfxEnabled || !interactionUnlocked) return;
     const nextSounds = queuedSfx.splice(0, queuedSfx.length);
     for (const name of nextSounds) {
-      playGeneratedSfx(name);
+      playFileSfx(name);
     }
+  }
+
+  function preloadSfxFiles() {
+    for (const group of Object.values(config.audio.sfxFiles || {})) {
+      for (const path of Object.values(group || {})) {
+        getSfxPlayer(path);
+      }
+    }
+  }
+
+  function getPrimeableSfxPlayers() {
+    const paths = new Set([
+      getSfxPath("bananaPickup"),
+      getSfxPath("bombExplosion")
+    ].filter(Boolean));
+    return [...paths].map((path) => getSfxPlayer(path));
+  }
+
+  function primeSfxPlayer(player) {
+    player.muted = true;
+    player.volume = 0;
+    const prime = player.play();
+    return Promise.resolve(prime).then(() => {
+      player.pause();
+      player.currentTime = 0;
+    }).catch(() => undefined).finally(() => {
+      player.muted = false;
+      player.volume = config.audio.sfxVolume;
+    });
+  }
+
+  function playFileSfx(name) {
+    const path = getSfxPath(name);
+    if (!path) return;
+    const player = getSfxPlayer(path);
+    player.pause();
+    player.currentTime = 0;
+    player.muted = false;
+    player.volume = config.audio.sfxVolume;
+    const sound = player.play();
+    if (sound?.catch) {
+      sound.catch(() => {
+        sfxPrimed = false;
+        queuedSfx.push(name);
+      });
+    }
+  }
+
+  function getSfxPath(name) {
+    const group = config.audio.sfxFiles?.[name];
+    if (!group) return "";
+    const presetName = name === "bananaPickup" ? config.audio.bananaSfxPreset : config.audio.bombSfxPreset;
+    return group[presetName] || "";
+  }
+
+  function getSfxPlayer(path) {
+    if (!path) return null;
+    if (sfxPlayers.has(path)) return sfxPlayers.get(path);
+    const player = new Audio(path);
+    player.preload = "auto";
+    player.playsInline = true;
+    player.load();
+    sfxPlayers.set(path, player);
+    return player;
   }
 
   function resetToConfig() {
