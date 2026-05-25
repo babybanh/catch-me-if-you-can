@@ -227,6 +227,9 @@ export const gameConfig = {
         softBoom: "/assets/audio/sfx/bomb-soft-boom.wav",
         cartoonPop: "/assets/audio/sfx/bomb-cartoon-pop.wav",
         lowThump: "/assets/audio/sfx/bomb-low-thump.wav"
+      },
+      bunnyHit: {
+        default: "/assets/audio/sfx/player-hit.wav"
       }
     }
   },

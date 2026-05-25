@@ -983,7 +983,8 @@ function createAudioController(config) {
   function getPrimeableSfxPlayers() {
     const paths = new Set([
       getSfxPath("bananaPickup"),
-      getSfxPath("bombExplosion")
+      getSfxPath("bombExplosion"),
+      getSfxPath("bunnyHit")
     ].filter(Boolean));
     return [...paths].map((path) => getSfxPlayer(path));
   }
@@ -1021,8 +1022,10 @@ function createAudioController(config) {
   function getSfxPath(name) {
     const group = config.audio.sfxFiles?.[name];
     if (!group) return "";
-    const presetName = name === "bananaPickup" ? config.audio.bananaSfxPreset : config.audio.bombSfxPreset;
-    return group[presetName] || "";
+    if (typeof group === "string") return group;
+    if (name === "bananaPickup") return group[config.audio.bananaSfxPreset] || Object.values(group)[0] || "";
+    if (name === "bombExplosion") return group[config.audio.bombSfxPreset] || Object.values(group)[0] || "";
+    return group.default || Object.values(group)[0] || "";
   }
 
   function getSfxPlayer(path) {
