@@ -81,6 +81,7 @@ export class CatchGameScene extends Phaser.Scene {
   }
 
   update(time, deltaMs) {
+    if (document.hidden) return;
     if (this.inputController.debugToggleRequested) {
       this.state.debugVisible = !this.state.debugVisible;
       this.inputController.debugToggleRequested = false;
